@@ -1,30 +1,124 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>GifTastic</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-</head>
-<body background="adventure.jpg" style="background-size: cover">
-  
-  <div id="divButtons" class="btn btn-warning shadow ml-3 mt-3">button</div>
- 
-  <form class="my-5 ml-3">
-    <label for="input" class="text-white">Where do you wanna go?</label><br>
-    <input type="text" id="input">
+	<head>
+		<meta charset="utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<title>GifTastic</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link
+			rel="stylesheet"
+			href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+			integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+			crossorigin="anonymous"
+		/>
+	</head>
+	<body background="adventure.jpg" style="background-size: cover">
+		<div id="divButtons" class="ml-3 mt-3"></div>
 
-    <input id="add-movie" type="submit" value="Go" class="btn btn-success shadow">
-  </form>
+		<form class="my-5 ml-3">
+			<label for="input" class="text-white">Where do you wanna go?</label><br />
+			<input type="text" id="destination-input" />
 
-  <div id="divGifs"></div>
+			<input id="go" type="submit" value="Go" class="btn btn-success shadow" />
+    </form>
+    <div>
+      <div id="instructionsDrop"></div>
+      <div class="mx-3">
+          <div id="gifDrop" class="d-flex justify-content-around flex-wrap shadow rounded"></div>
+      </div>
+  </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script>
-  
-  
-  
-  </script>
-</body>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script type="text/javascript">
+
+  $(document).ready(function() {
+
+			var destinations = ['Hawaii', 'Paris', 'Australia', 'South Africa', 'Switzerland', 'Thailand', 'New York', 'India','Disneyland'];
+
+			function displayGIFs() {
+        $("#instructionsDrop").text("");
+        $("#gifDrop").empty();
+				var destination = $(this).attr('data-name');
+        var offset = Math.floor(Math.random() * 50);
+				var queryURL = "https://api.giphy.com/v1/gifs/search?api_key=CRvEQ3lCs7BPJlGZx46DTImKYSKoYEiT&q=" + destination + "&limit=12&offset=" + offset + "&lang=en";
+        var instructions = $("<h4 class='text-white ml-3'>").text("Click on the image to animate! Click again to pause.");
+
+        $("#instructionsDrop").append(instructions);
+
+        // Creates an AJAX call for the destination that is clicked on...
+        $.ajax({
+          url: queryURL,
+          method: "GET"
+        }).then(function(response) {
+
+          $("#destinations").empty();
+          var results = response.data;
+          console.log(results);
+          
+
+          for (var i = 0; i < results.length; i++) {
+            
+            var divGifs = $("<div class='destination'>");
+            var rating = results[i].rating.toUpperCase();
+            var pRating = $("<p class='text-white'>").text("Rating: " + rating);
+
+            // Retrieving the URL for the images and creating div to display...
+            var urlStill = results[i].images.fixed_height_still.url;
+            var urlAnimate = results[i].images.fixed_height.url;
+            var gif = $("<img>").addClass("gif").attr("src", urlStill).attr("data-still", urlStill).attr("data-animate", urlAnimate).attr("data-state", "still");
+            
+            divGifs.append(gif);
+            divGifs.append(pRating);
+            $("#gifDrop").append(divGifs);
+          };
+
+          $(".gif").on("click", function() {
+                var state = $(this).attr("data-state");
+
+                if (state === "still") {
+                    $(this).attr("src", $(this).attr("data-animate"));
+                    $(this).attr("data-state", "animate");
+                } else {
+                    $(this).attr("src", $(this).attr("data-still"));
+                    $(this).attr("data-state", "still");
+                }
+
+            });
+
+        });
+      };
+
+			function renderButtons() {
+				$('#divButtons').empty();
+
+				// Loop through the array of destinations and create the buttons for each
+				for (var i = 0; i < destinations.length; i++) {
+					var x = $('<button>');
+					x.addClass('btn-destination btn btn-warning shadow m-1 py-1 px-2');
+					x.attr('data-name', destinations[i]);
+					x.text(destinations[i]);
+					$('#divButtons').append(x);
+				}
+			};
+
+      //user enters data and clicks the Go button...
+
+      $("#go").on("click", function(event) {
+      
+        event.preventDefault();
+        var destination = $("#destination-input").val().trim();
+        destinations.push(destination);
+
+        renderButtons();
+        $("#destination-input").val("");
+      });
+
+      // click event listener for all buttons...
+      $(document).on("click", ".btn-destination", displayGIFs);
+
+      // Call the renderButtons function to display the intial buttons...
+      renderButtons();
+  });
+		</script>
+	</body>
 </html>
